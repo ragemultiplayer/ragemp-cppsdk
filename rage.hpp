@@ -3,12 +3,13 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <cstring>
 
 #include "Entity.hpp"
 
 #include "Pools.hpp"
 
-#ifdef WIN32
+#ifdef _WIN32
 #define RAGE_API extern "C" __declspec(dllexport) 
 #else
 #define RAGE_API

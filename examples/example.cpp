@@ -24,3 +24,4 @@ RAGE_API rage::IPlugin *InitializePlugin(rage::IMultiplayer *mp)
 	mp->AddEventHandler(new gm::EventHandler);
 	return new rage::IPlugin;
 }
+
