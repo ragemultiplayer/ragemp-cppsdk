@@ -12,14 +12,16 @@ namespace rage
 		virtual void BroadcastInRange(const std::u16string& message, const vector3& position, float range, dimensionId_t dimension = 0xFFFFFFFF) const = 0;
 		virtual void BroadcastInDimension(const std::u16string& message, dimensionId_t dimension) const = 0;
 
-	private:
+	public:
 		virtual void _Call(const std::string& eventName, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
 		virtual void _CallInRange(const vector3& position, float range, dimensionId_t dimension, const std::string& eventName, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
 		virtual void _CallInDimension(dimensionId_t dimension, const std::string& eventName, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
+		virtual void _CallFor(const std::vector<rage::IPlayer*>& players, const std::string& eventName, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
 
 		virtual void _Invoke(uint64_t nativeHash, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
 		virtual void _InvokeInRange(const vector3& position, float range, dimensionId_t dimension, uint64_t nativeHash, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
-		virtual void _InvokeInDimension(dimensionId_t dimension, uint64_t nativeHash,const arg_t *arguments = nullptr, size_t count = 0) const = 0;
+		virtual void _InvokeInDimension(dimensionId_t dimension, uint64_t nativeHash, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
+		virtual void _InvokeFor(const std::vector<rage::IPlayer*>& players, uint64_t nativeHash, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
 
 	public:
 		template<typename ...Args>
@@ -111,7 +113,7 @@ namespace rage
 		: public IPool<IVehicle>
 	{
 	public:
-		virtual IVehicle *New(uint32_t model, const vector3& position, float heading = 0.f, dimensionId_t dimension = 0) const = 0;
+		virtual IVehicle *New(uint32_t model, const vector3& position, float heading = 0.f, const std::string& numberPlate = "", uint8_t alpha = 255, bool locked = false, bool engine = false, dimensionId_t dimension = 0) const = 0;
 	};
 
 	class IColshapePool
@@ -129,7 +131,7 @@ namespace rage
 		: public IPool<ICheckpoint>
 	{
 	public:
-		virtual ICheckpoint *New(uint8_t type, const vector3& position, const vector3& nextPos, float radius, const rgba_t& colour, bool visible = true, dimensionId_t dimension = 0) const = 0;
+		virtual ICheckpoint *New(uint8_t type, const vector3& position, const vector3& nextPos, float radius, const rgba_t color, bool visible = true, dimensionId_t dimension = 0) const = 0;
 	};
 
 	class IMarkerPool
@@ -143,8 +145,7 @@ namespace rage
 		: public IPool<IBlip>
 	{
 	public:
-		virtual IBlip *NewStreamed(uint32_t sprite, const vector3& position, float streamRange, dimensionId_t dimension = 0) const = 0;
-		virtual IBlip *New(uint32_t sprite, const vector3& position, dimensionId_t dimension = 0) const = 0;
+		virtual IBlip *New(uint32_t sprite, const vector3& position, float scale, uint8_t color, const std::string& name = "", uint8_t alpha = 255, float drawDistance = 0.f, bool shortRange = false, short rotation = 0, dimensionId_t dimension = 0) const = 0;
 	};
 
 	class IPickupPool
@@ -159,5 +160,12 @@ namespace rage
 	{
 	public:
 		virtual IObject *New(uint32_t model, const vector3& position, const vector3& rotation, dimensionId_t dimension = 0) const = 0;
+	};
+
+	class ITextLabelPool
+		: public IPool<ITextLabel>
+	{
+	public:
+		virtual ITextLabel *New(const vector3& pos, const std::string& text, uint8_t fontId, rage::rgba_t color, float drawDistance = 150.f, bool los = false, dimensionId_t dimension = 0) const = 0;
 	};
 }
