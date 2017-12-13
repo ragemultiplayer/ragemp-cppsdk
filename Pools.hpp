@@ -8,9 +8,9 @@ namespace rage
 		: public IPool<IPlayer>
 	{
 	public:
-		virtual void Broadcast(const std::u16string& message) const = 0;
-		virtual void BroadcastInRange(const std::u16string& message, const vector3& position, float range, dimensionId_t dimension = 0xFFFFFFFF) const = 0;
-		virtual void BroadcastInDimension(const std::u16string& message, dimensionId_t dimension) const = 0;
+		virtual void Broadcast(const std::string& message) const = 0;
+		virtual void BroadcastInRange(const std::string& message, const vector3& position, float range, dimensionId_t dimension = 0xFFFFFFFF) const = 0;
+		virtual void BroadcastInDimension(const std::string& message, dimensionId_t dimension) const = 0;
 
 	public:
 		virtual void _Call(const std::string& eventName, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
