@@ -9,20 +9,23 @@
 
 namespace rage
 {
-	struct rgba_t
-	{
-		union
-		{
-			uint32_t intvalue;
-			uint8_t rgba[4];
-		};
-	};
 
 	struct rgb_t
 	{
-		uint8_t r;
-		uint8_t g;
-		uint8_t b;
+		rgb_t(uint8_t r, uint8_t g, uint8_t b)
+			: intvalue((b << 16) + (g << 8) + r) { }
+
+		explicit rgb_t(uint32_t val)
+			: intvalue(val) { }
+
+		rgb_t()
+			: intvalue(0) { }
+
+		union
+		{
+			uint32_t intvalue;
+			uint8_t rgba[3];
+		};
 	};
 
 	struct paintInfo_t
@@ -57,76 +60,6 @@ namespace rage
 		Rectangle
 	};
 
-	enum class blipMode_t : uint8_t
-	{
-		Global,
-		Streamed
-	};
-
-	struct arg_t
-	{
-	public:
-		enum class val_t : uint8_t
-		{
-			Int,
-			Float,
-			String,
-			Boolean,
-			Null,
-
-			Entity
-		};
-
-		arg_t() : type(val_t::Null) { }
-		arg_t(bool b) : type(val_t::Boolean) { v.b = b; }
-		arg_t(int i) : type(val_t::Int) { v.i = i; }
-		arg_t(float f) : type(val_t::Float) { v.f = f; }
-		arg_t(const std::string& str) : type(val_t::String) { v.str = new char[str.length()]; memcpy(v.str, str.c_str(), str.length() * sizeof(std::string::traits_type::char_type)); }
-		arg_t(rage::IEntity *entity) : type(val_t::Entity) { v.entity = entity; }
-
-		val_t GetType() { return type; }
-		bool IsNull() const { return type == val_t::Null; }
-		bool IsBoolean() const { return type == val_t::Boolean; }
-		bool IsInt() const { return type == val_t::Int; }
-		bool IsFloat() const { return type == val_t::Float; }
-		bool IsString() const { return type == val_t::String; }
-		bool IsEntity() const { return type == val_t::Entity; }
-
-		bool Boolean() const { return (type == val_t::Boolean) ? v.b : false; }
-		int Int() const { return (type == val_t::Int) ? v.i : 0; }
-		float Float() const { return (type == val_t::Float) ? v.f : 0.0f; }
-		const char *String() const { return (type == val_t::String) ? v.str : ""; }
-		rage::IEntity *Entity() const { return (type == val_t::Entity) ? v.entity : nullptr; }
-
-		~arg_t() { if (type == val_t::String && v.str) delete[] v.str; }
-
-	private:
-		union
-		{
-			bool b;
-			int i;
-			float f;
-			char *str;
-			rage::IEntity *entity;
-		} v;
-
-		val_t type;
-	};
-
-	struct args_t
-	{
-	public:
-		args_t(arg_t *data, size_t len)
-			: m_data(data), m_len(len) { }
-
-		size_t Length() const { return this->m_len; }
-		const arg_t& operator[](int id) const { if (id >= this->m_len) return arg_t{}; return this->m_data[id]; }
-
-	private:
-		size_t m_len;
-		arg_t *m_data;
-	};
-
 	using hash_t = uint32_t;
 
 	class IPlayer;
@@ -136,6 +69,12 @@ namespace rage
 	class IMarker;
 	class IBlip;
 	class IPickup;
+
+	struct headOverlay_t
+	{
+		uint8_t index;
+		float opacity;
+};
 
 	using Entity =
 #ifdef IS_MP
@@ -148,11 +87,12 @@ namespace rage
 		: public Entity
 	{
 	public:
-		virtual void Kick(const char *reason) = 0;
-		virtual void Ban(const char *reason) = 0;
-		virtual void OutputChatBox(const std::u16string& text) = 0;
-		virtual void Notify(const std::u16string& text) = 0;
-	private:
+
+		virtual void Kick(const char *reason = nullptr) = 0;
+		virtual void Ban(const char *reason = nullptr) = 0;
+		virtual void OutputChatBox(const std::string& text) = 0;
+		virtual void Notify(const std::string& text) = 0;
+	public:
 		virtual void _Call(const std::string& eventName, const arg_t *arguments = nullptr, size_t count = 0) = 0;
 		virtual void _Invoke(uint64_t nativeHash, const arg_t *arguments = nullptr, size_t count = 0) = 0;
 	public:
@@ -188,6 +128,7 @@ namespace rage
 		virtual const vector3& GetAimingAt() = 0;
 
 		virtual int GetPing() = 0;
+		virtual float GetPacketLoss() = 0;
 
 		virtual const std::string& GetKickReason() = 0;
 
@@ -198,13 +139,18 @@ namespace rage
 		virtual bool IsEnteringVehicle() = 0;
 		virtual bool IsLeavingVehicle() = 0;
 		virtual bool IsClimbing() = 0;
+		virtual bool IsOnLadder() = 0;
+		virtual bool IsReloading() = 0;
+		virtual bool IsInMelee() = 0;
 		virtual std::string GetActionString() = 0;
 
+		// Vehicle
 		virtual IVehicle *GetVehicle() = 0;
 		virtual void PutIntoVehicle(IVehicle *vehicle, int8_t seatId) = 0;
 		virtual void RemoveFromVehicle() = 0;
 		virtual int8_t GetSeat() = 0;
 
+		// Customization
 		virtual uint8_t GetEyeColour() = 0;
 		virtual void SetEyeColour(uint8_t colour) = 0;
 
@@ -222,11 +168,36 @@ namespace rage
 
 		virtual void UpdateHeadBlend(float shapeMix, float skinMix, float thirdMix) = 0;
 
-		virtual uint32_t GetWeapon() = 0;
+		virtual headOverlay_t GetHeadOverlay(uint8_t overlayId) = 0;
+		virtual void SetHeadOverlay(uint8_t overlayId, headOverlay_t overlay) = 0;
+
+		// Weapons
+		virtual uint32_t GetCurrentWeapon() = 0;
+		virtual void SetCurrentWeapon(uint32_t weapon) = 0;
+
+		virtual uint16_t GetCurrentWeaponAmmo() = 0;
+		virtual void SetCurrentWeaponAmmo(uint16_t ammo) = 0;
+
+		virtual uint16_t GetWeaponAmmo(uint32_t weaponHash) = 0;
+		virtual void SetWeaponAmmo(hash_t hash, uint16_t ammo) = 0;
+
+		virtual std::map<hash_t, uint16_t> GetWeapons() = 0;
+
 		virtual void GiveWeapon(hash_t hash, uint16_t ammo) = 0;
 		virtual void GiveWeapons(std::vector<std::pair<hash_t, uint16_t>> weapons) = 0;
 
+		virtual void RemoveWeapon(hash_t hash) = 0;
+		virtual void RemoveWeapons(const std::vector<hash_t>& hash) = 0;
+		virtual void RemoveAllWeapons() = 0;
+
+		//
+		virtual bool IsStreamed(IPlayer *player) = 0;
+		virtual std::vector<IPlayer*> GetStreamed() = 0;
+
 		virtual const std::string& GetSerial() = 0;
+		virtual const std::string& GetSocialClubName() = 0;
+
+		virtual void RemoveObject(uint32_t model, const vector3& position, float radius) = 0;
 
 	public:
 		template<typename ...Args>
@@ -276,6 +247,9 @@ namespace rage
 		virtual bool IsEngineActive() = 0;
 		virtual void SetEngineActive(bool toggle) = 0;
 
+		virtual bool AreTaxiLightsActive() = 0;
+		virtual void SetTaxiLightsActive(bool toggle) = 0;
+
 		virtual bool IsRocketBoostActive() = 0;
 		virtual bool IsBrakeActive() = 0;
 		virtual float GetSteerAngle() = 0;
@@ -284,7 +258,7 @@ namespace rage
 		virtual float GetEngineHealth() = 0;
 		virtual float GetBodyHealth() = 0;
 
-		virtual rage::IPlayer *GetOccupant(uint8_t seat) = 0; 
+		virtual rage::IPlayer *GetOccupant(uint8_t seat) = 0;
 		virtual std::vector<rage::IPlayer*> GetOccupants() = 0;
 		virtual void SetOccupant(uint8_t seat, rage::IPlayer *player) = 0;
 
@@ -319,6 +293,38 @@ namespace rage
 
 		virtual const std::string& GetNumberPlate() = 0;
 		virtual void SetNumberPlate(const std::string& numberPlate) = 0;
+
+		virtual bool IsStreamed(IPlayer *player) = 0;
+		virtual std::vector<IPlayer*> GetStreamed() = 0;
+
+		virtual uint8_t GetLivery() = 0;
+		virtual void SetLivery(uint8_t livery) = 0;
+
+		virtual uint8_t GetWheelColor() = 0;
+		virtual void SetWheelColor(uint8_t color) = 0;
+
+		virtual uint8_t GetWheelType() = 0;
+		virtual void SetWheelType(uint8_t type) = 0;
+
+		virtual uint8_t GetNumberPlateType() = 0;
+		virtual void SetNumberPlateType(uint8_t type) = 0;
+
+		virtual uint8_t GetPearlescentColor() = 0;
+		virtual void SetPearlescentColor(uint8_t color) = 0;
+
+		virtual uint8_t GetWindowTint() = 0;
+		virtual void SetWindowTint(uint8_t tint) = 0;
+
+		virtual uint8_t GetDashboardColor() = 0;
+		virtual void SetDashboardColor(uint8_t color) = 0;
+
+		virtual uint8_t GetTrimColor() = 0;
+		virtual void SetTrimColor(uint8_t type) = 0;
+
+		virtual bool GetExtra(uint8_t id) = 0;
+		virtual void SetExtra(uint8_t id, bool state) = 0;
+
+		virtual float GetMovableState() = 0;
 	};
 
 	class IColshape
@@ -352,7 +358,7 @@ namespace rage
 	class IMarker
 		: public Entity
 	{
-	public:		
+	public:
 		virtual const rage::rgba_t& GetColour() = 0;
 		virtual void SetColour(uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;
 
@@ -373,9 +379,14 @@ namespace rage
 		: public Entity
 	{
 	public:
-		virtual float GetRadius() = 0;
+		virtual float GetDrawDistance() = 0;
+		virtual void SetDrawDistance(float distance) = 0;
 
-		virtual blipMode_t GetMode() = 0;
+		virtual short GetBlipRotation() = 0;
+		virtual void SetRotation(short rotation) = 0;
+
+		virtual bool IsShortRange() = 0;
+		virtual void SetShortRange(bool toggle) = 0;
 
 		virtual void RouteFor(const std::vector<rage::IPlayer*>& players, uint8_t colour, float scale) = 0;
 		virtual void UnrouteFor(const std::vector<rage::IPlayer*>& players) = 0;
@@ -383,8 +394,8 @@ namespace rage
 		virtual uint8_t GetColour() = 0;
 		virtual void SetColour(uint8_t colour) = 0;
 
-		virtual uint8_t GetAlpha() = 0;
-		virtual void SetAlpha(uint8_t alpha) = 0;
+		//virtual uint8_t GetAlpha() = 0;
+		//virtual void SetAlpha(uint8_t alpha) = 0;
 
 		virtual float GetScale() = 0;
 		virtual void SetScale(float scale) = 0;
@@ -406,4 +417,23 @@ namespace rage
 	public:
 	};
 
+	class ITextLabel
+		: public Entity
+	{
+	public:
+		virtual rgba_t GetColor() = 0;
+		virtual void SetColor(const rgba_t color) = 0;
+
+		virtual const std::string& GetText() = 0;
+		virtual void SetText(const std::string& text) = 0;
+
+		virtual bool GetLOS() = 0;
+		virtual void SetLOS(bool toggle) = 0;
+
+		virtual float GetDrawDistance() = 0;
+		virtual void SetDrawDistance(float distance) = 0;
+
+		virtual uint8_t GetFont() = 0;
+		virtual void SetFont(uint8_t font) = 0;
+	};
 }
