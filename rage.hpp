@@ -15,7 +15,7 @@
 #ifdef WIN32
 #define RAGE_API extern "C" __declspec(dllexport) 
 #else
-#define RAGE_API
+#define RAGE_API extern "C"
 #endif
 
 namespace rage
