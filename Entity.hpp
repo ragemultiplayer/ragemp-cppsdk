@@ -150,7 +150,7 @@ namespace rage
 			: m_data(data), m_len(len) { }
 
 		size_t Length() const { return this->m_len; }
-		const arg_t& operator[](int id) const { if (id >= this->m_len) { static arg_t ar{}; return ar; } return this->m_data[id]; }
+		const arg_t& operator[](size_t id) const { if (id >= this->m_len) { static arg_t ar{}; return ar; } return this->m_data[id]; }
 
 		auto begin() const { return m_data; }
 		auto end() const { return &m_data[this->m_len]; }

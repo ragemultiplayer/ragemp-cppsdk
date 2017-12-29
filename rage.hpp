@@ -12,7 +12,7 @@
 
 #include "Pools.hpp"
 
-#ifdef WIN32
+#ifdef _WIN32
 #define RAGE_API extern "C" __declspec(dllexport) 
 #else
 #define RAGE_API extern "C"
@@ -199,7 +199,7 @@ namespace rage
 
 
 	using initializeFunc_t = IPlugin*(
-	#ifdef WIN32
+#ifdef _WIN32
 	__cdecl
 #endif
 		*) (IMultiplayer *multiplayer);
