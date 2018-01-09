@@ -325,6 +325,12 @@ namespace rage
 		virtual void SetExtra(uint8_t id, bool state) = 0;
 
 		virtual float GetMovableState() = 0;
+
+		virtual const quat_t& GetQuaternion() = 0;
+		virtual float GetHeading() = 0;
+
+		virtual rage::IVehicle *GetTrailer() = 0;
+		virtual rage::IVehicle *GetTraileredBy() = 0;
 	};
 
 	class IColshape
