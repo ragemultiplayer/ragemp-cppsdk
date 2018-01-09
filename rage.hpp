@@ -180,6 +180,13 @@ namespace rage
 		virtual void SetTrafficLightsState(int state) = 0;
 	};
 
+	class IConfig
+	{
+	public:
+		virtual int GetInt(const std::string& key, int def = 0) = 0;
+		virtual std::string GetString(const std::string& key, const std::string& def = "") = 0;
+	};
+
 	class IMultiplayer
 	{
 	public:
@@ -195,6 +202,7 @@ namespace rage
 		virtual IObjectPool& GetObjectPool() = 0;
 		virtual ITextLabelPool& GetLabelPool() = 0;
 		virtual IWorld& GetWorld() = 0;
+		virtual IConfig& GetConfig() = 0;
 	};
 
 
