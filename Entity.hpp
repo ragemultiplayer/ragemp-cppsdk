@@ -81,6 +81,8 @@ namespace rage
 
 	class IEntity;
 
+
+#pragma pack(push, 1)
 	struct arg_t
 	{
 	public:
@@ -90,25 +92,29 @@ namespace rage
 			Float,
 			String,
 			Boolean,
+			Vector3,
+			Object,
 			Null,
 
 			Entity
 		};
 
-		arg_t() : type(val_t::Null) { }
-		arg_t(bool b) : type(val_t::Boolean) { v.b = b; }
-		arg_t(int i) : type(val_t::Int) { v.i = i; }
-		arg_t(float f) : type(val_t::Float) { v.f = f; }
-		arg_t(const std::string& str) : type(val_t::String) { v.str = new char[str.length() + 1]; memcpy(v.str, str.c_str(), str.length()); v.str[str.length()] = 0; }
-		arg_t(rage::IEntity *entity) : type(val_t::Entity) { v.entity = entity; }
-		arg_t(const arg_t& r) : type(val_t::Null) { *this = r; }
+		arg_t() : type(val_t::Null), v{} { }
+		explicit arg_t(bool b) : type(val_t::Boolean), v { b } { }
+		explicit arg_t(int i) : type(val_t::Int), v { i } { }
+		explicit arg_t(float f) : type(val_t::Float), v { f } { }
+		explicit arg_t(const std::string& str) : type(val_t::String), v { new char[str.length() + 1] } { memcpy(v.str, str.c_str(), str.length()); v.str[str.length()] = 0; }
+		explicit arg_t(entity_t entityType, entityId_t id, rage::IEntity *entity) : type(val_t::Entity), v{ entityType, id, entity } { }
+		explicit arg_t(const arg_t& r) : type(val_t::Null) { *this = r; }
 
 		void SetNull() { DeleteString(); type = val_t::Null; }
 		void SetBoolean(bool b) { DeleteString(); type = val_t::Boolean; v.b = b; }
 		void SetInteger(int i) { DeleteString(); type = val_t::Int; v.i = i; }
 		void SetFloat(float f) { DeleteString(); type = val_t::Float; v.f = f; }
 		void SetString(const std::string& str) { DeleteString(); type = val_t::String; v.str = new char[str.length() + 1]; memcpy(v.str, str.c_str(), str.length()); v.str[str.length()] = 0; }
-		void SetEntity(IEntity *entity) { DeleteString(); type = val_t::Entity; v.entity = entity; }
+		void SetJson(const std::string& str) { DeleteString(); type = val_t::Object; v.str = new char[str.length() + 1]; memcpy(v.str, str.c_str(), str.length()); v.str[str.length()] = 0; }
+		void SetEntity(entity_t entityType, entityId_t id, IEntity *entity) { DeleteString(); type = val_t::Entity; v.entity = { entityType, id, entity }; }
+		void SetVector3(const vector3& vec) { DeleteString(); type = val_t::Vector3; v.vector = vec; }
 
 		val_t GetType() const { return type; }
 		bool IsNull() const { return type == val_t::Null; }
@@ -122,26 +128,51 @@ namespace rage
 		int Int() const { return (type == val_t::Int) ? v.i : 0; }
 		float Float() const { return (type == val_t::Float) ? v.f : 0.0f; }
 		const char *String() const { return (type == val_t::String && v.str) ? v.str : ""; }
-		rage::IEntity *Entity() const { return (type == val_t::Entity) ? v.entity : nullptr; }
+		const char *Object() const { return (type == val_t::Object && v.str) ? v.str : ""; }
+		const vector3& Vector3() const { if (type == val_t::Vector3) { return v.vector; } else { static vector3 ret; return ret; } }
+
+		rage::IEntity *Entity() const { return (type == val_t::Entity) ? v.entity.ptr : nullptr; }
+		entityId_t EntityId() const { return (type == val_t::Entity) ? v.entity.id : 0xFFFF; }
+		entity_t EntityType() const { return (type == val_t::Entity) ? v.entity.type : entity_t::INVALID; }
 
 		arg_t& operator=(const arg_t& r) { DeleteString(); if (r.GetType() != val_t::String) { this->v.entity = r.v.entity; type = r.GetType(); } else { this->SetString(r.String()); } return *this; }
+		arg_t& operator=(arg_t&& r) { DeleteString(); this->v.str = r.v.str; type = r.GetType(); r.type = val_t::Null; r.v.str = nullptr; return *this; }
 
 		~arg_t() { DeleteString(); }
 
 	private:
-		void DeleteString() { if (type == val_t::String && v.str) { delete[] v.str; v.str = nullptr; } }
+		bool OwnsAString() { return (type == val_t::Object || type == val_t::String); }
+		void DeleteString() { if (this->OwnsAString() && v.str) { delete[] v.str; v.str = nullptr; } }
 
-		union
+		union _Value
 		{
 			bool b;
 			int i;
 			float f;
 			char *str;
-			IEntity *entity;
+
+			vector3 vector;
+
+			struct _EntityData
+			{
+				entity_t type;
+				entityId_t id;
+
+				IEntity *ptr;
+			} entity;
+
+			_Value() { memset(this, 0, sizeof(_Value)); }
+			_Value(bool _b) : b { _b } { }
+			_Value(int _i) : i { _i } { }
+			_Value(float _f) : f { _f } { }
+			_Value(char *_str) : str{ _str } { }
+			_Value(const vector3& _vec) : vector{ _vec } { }
+			_Value(entity_t entityType, entityId_t id, IEntity *ptr) : entity{ entityType, id, ptr } { }
 		} v;
 
 		val_t type;
 	};
+#pragma pack(pop)
 
 	struct args_t
 	{
@@ -159,76 +190,7 @@ namespace rage
 		size_t m_len;
 		arg_t *m_data;
 	};
-
-	struct sharedVar_t
-	{
-	public:
-		enum class val_t : uint8_t
-		{
-			Int,
-			Float,
-			String,
-			Boolean,
-			Null,
-
-			Entity
-		};
-
-		struct entityData_t
-		{
-			entity_t type;
-			entityId_t id;
-		};
-
-		sharedVar_t() : type(val_t::Null) { }
-		explicit sharedVar_t(bool b) : type(val_t::Boolean) { v.b = b; }
-		explicit sharedVar_t(int i) : type(val_t::Int) { v.i = i; }
-		explicit sharedVar_t(float f) : type(val_t::Float) { v.f = f; }
-		explicit sharedVar_t(const std::string& str) : type(val_t::String) { v.str = new char[str.length() + 1]; memcpy(v.str, str.c_str(), str.length()); v.str[str.length()] = 0; }
-		explicit sharedVar_t(entity_t entityType, entityId_t id) : type(val_t::Entity) { v.entity = entityData_t{ entityType, id }; }
-		explicit sharedVar_t(const sharedVar_t& r) : type(val_t::Null) { *this = r; }
-
-		void SetNull() { DeleteString(); type = val_t::Null; }
-		void SetBoolean(bool b) { DeleteString(); type = val_t::Boolean; v.b = b; }
-		void SetInteger(int i) { DeleteString(); type = val_t::Int; v.i = i; }
-		void SetFloat(float f) { DeleteString(); type = val_t::Float; v.f = f; }
-		void SetString(const std::string& str) { DeleteString(); type = val_t::String; v.str = new char[str.length() + 1]; memcpy(v.str, str.c_str(), str.length()); v.str[str.length()] = 0; }
-		void SetEntity(entity_t entityType, entityId_t id) { DeleteString(); type = val_t::Entity; v.entity = entityData_t{ entityType, id }; }
-
-		val_t GetType() const { return type; }
-		bool IsNull() const { return type == val_t::Null; }
-		bool IsBoolean() const { return type == val_t::Boolean; }
-		bool IsInt() const { return type == val_t::Int; }
-		bool IsFloat() const { return type == val_t::Float; }
-		bool IsString() const { return type == val_t::String; }
-		bool IsEntity() const { return type == val_t::Entity; }
-
-		bool Boolean() const { return (type == val_t::Boolean) ? v.b : false; }
-		int Int() const { return (type == val_t::Int) ? v.i : 0; }
-		float Float() const { return (type == val_t::Float) ? v.f : 0.0f; }
-		const char *String() const { return (type == val_t::String && v.str) ? v.str : ""; }
-		auto Entity() const { return (type == val_t::Entity) ? v.entity : entityData_t{ entity_t{}, entityId_t{ 0xFFFF } }; }
-
-		sharedVar_t& operator=(const sharedVar_t& r) { DeleteString(); if (r.GetType() != val_t::String) { this->v.entity = r.v.entity; type = r.GetType(); } else { this->SetString(r.String()); } return *this; }
-		sharedVar_t& operator=(sharedVar_t&& r) { DeleteString(); this->v.str = r.v.str; type = r.GetType(); r.type = val_t::Null; r.v.str = nullptr; return *this; }
-
-		~sharedVar_t() { DeleteString(); }
-
-	private:
-		void DeleteString() { if (type == val_t::String && v.str) { delete[] v.str; v.str = nullptr; } }
-
-		union
-		{
-			bool b;
-			int i;
-			float f;
-			char *str;
-			entityData_t entity;
-		} v;
-
-		val_t type;
-	};
-
+	
 	class IEntity
 	{
 	public:
@@ -268,8 +230,8 @@ namespace rage
 		template<class T>
 		void External(T *val) { this->SetExternalValue(reinterpret_cast<void*>(val)); }
 
-		virtual const sharedVar_t& GetVariable(const std::string& key) = 0;
-		virtual void SetVariable(const std::string& key, const sharedVar_t& arg) = 0;
+		virtual const arg_t& GetVariable(const std::string& key) = 0;
+		virtual void SetVariable(const std::string& key, const arg_t& arg) = 0;
 	};
 
 	template<class T>
