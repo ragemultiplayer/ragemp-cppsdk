@@ -33,6 +33,14 @@ namespace rage
 
 	using vector3 = _vector3<float>;
 
+	struct quat_t
+	{
+		float x;
+		float y;
+		float z;
+		float w;
+	};
+	
 	struct vector2
 	{
 		float x;
