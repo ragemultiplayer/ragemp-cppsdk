@@ -141,7 +141,7 @@ namespace rage
 
 		rage::IEntity *Entity() const { return (type == val_t::Entity) ? v.entity.ptr : nullptr; }
 		entityId_t EntityId() const { return (type == val_t::Entity) ? v.entity.id : 0xFFFF; }
-		entity_t EntityType() const { return (type == val_t::Entity) ? v.entity.type : entity_t::INVALID; }
+		entity_t EntityType() const { return (type == val_t::Entity) ? v.entity.type : static_cast<entity_t>(-1); }
 
 		arg_t& operator=(const arg_t& r) { DeleteString(); if (r.GetType() != val_t::String) { this->v.entity = r.v.entity; type = r.GetType(); } else { this->SetString(r.String()); } return *this; }
 		arg_t& operator=(arg_t&& r) { DeleteString(); this->v.str = r.v.str; type = r.GetType(); r.type = val_t::Null; r.v.str = nullptr; return *this; }
