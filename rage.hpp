@@ -20,6 +20,8 @@
 
 namespace rage
 {
+	using removeEventHandler_t = std::function<void(IPlayer*, const args_t&)>;
+	
 	struct time_t
 	{
 		union
@@ -191,6 +193,8 @@ namespace rage
 	{
 	public:
 		virtual void AddEventHandler(IEventHandler *handler) = 0;
+
+		virtual void AddRemoteEventHandler(const std::string& eventName, removeEventHandler_t handler) = 0;
 
 		virtual IPlayerPool& GetPlayerPool() = 0;
 		virtual IVehiclePool& GetVehiclePool() = 0;
