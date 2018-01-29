@@ -94,6 +94,7 @@ namespace rage
 		virtual void Notify(const std::string& text) = 0;
 	public:
 		virtual void _Call(const std::string& eventName, const arg_t *arguments = nullptr, size_t count = 0) = 0;
+		virtual void _CallHash(uint64_t eventNameHash, const arg_t *arguments = nullptr, size_t count = 0) = 0; // xxhash64
 		virtual void _Invoke(uint64_t nativeHash, const arg_t *arguments = nullptr, size_t count = 0) = 0;
 	public:
 		virtual void Spawn(const vector3& pos, float heading) = 0;
@@ -104,8 +105,14 @@ namespace rage
 		virtual const clothData_t& GetClothes(uint8_t id) = 0;
 		virtual void SetClothes(uint8_t id, const clothData_t& clothes) = 0;
 
+		virtual void SetClothes(const std::vector<std::pair<uint8_t, const clothData_t>>& clothes) = 0;
+
 		virtual const propData_t& GetProp(uint8_t id) = 0;
-		virtual void SetProp(uint8_t id, const propData_t& prop) = 0;
+		virtual void SetProp(uint8_t id, const propData_t prop) = 0;
+
+		virtual void SetProp(const std::vector<std::pair<uint8_t, const propData_t>>& clothes) = 0;
+
+		virtual void SetCustomization(bool gender, const rage::headBlend_t& headBlend, uint8_t eyeColor, uint8_t hairColor, uint8_t hightlightColor, const std::vector<float>& faceFeatures) = 0;
 
 		virtual void Eval(const std::string& code) = 0;
 
