@@ -240,6 +240,8 @@ namespace rage
 
 		virtual const arg_t& GetVariable(const std::string& key) = 0;
 		virtual void SetVariable(const std::string& key, const arg_t& arg) = 0;
+		virtual void SetVariables(const std::vector<std::pair<const std::string&, const arg_t&>>& vars) = 0;
+		virtual bool HasVariable(const std::string& key) = 0;
 	};
 
 	template<class T>
