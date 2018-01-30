@@ -102,7 +102,7 @@ namespace rage
 		virtual void OnPlayerDamage(IPlayer *player, float healthLoss, float armorLoss) { }
 		virtual void OnPlayerWeaponChange(IPlayer *player, hash_t oldWeapon, hash_t newWeapon) { }
 
-		virtual void OnPlayerRemoteEvent(IPlayer *player, const std::string& eventName, const args_t& args) { }
+		virtual void OnPlayerRemoteEvent(IPlayer *player, uint64_t eventNameHash, const args_t& args) { } // xxhash64
 
 		virtual void OnPlayerStartEnterVehicle(IPlayer *player, IVehicle *vehicle, uint8_t seatId) { }
 		virtual void OnPlayerEnterVehicle(IPlayer *player, IVehicle *vehicle, uint8_t seatId) { }
