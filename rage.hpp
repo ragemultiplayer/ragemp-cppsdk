@@ -6,6 +6,8 @@
 #include <vector>
 #include <map>
 
+#include <functional>
+
 #include <locale>
 #include <codecvt>
 
