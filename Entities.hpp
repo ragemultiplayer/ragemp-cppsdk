@@ -74,7 +74,9 @@ namespace rage
 	{
 		uint8_t index;
 		float opacity;
-};
+		uint8_t colorId;
+		uint8_t secondaryColorId;
+	};
 
 	using Entity =
 #ifdef IS_MP
@@ -112,8 +114,17 @@ namespace rage
 
 		virtual void SetProp(const std::vector<std::pair<uint8_t, const propData_t>>& clothes) = 0;
 
-		virtual void SetCustomization(bool gender, const rage::headBlend_t& headBlend, uint8_t eyeColor, uint8_t hairColor, uint8_t hightlightColor, const std::vector<float>& faceFeatures) = 0;
+		virtual void SetCustomization(bool gender, 
+			const rage::headBlend_t& headBlend,
+			uint8_t eyeColor, uint8_t hairColor, uint8_t hightlightColor, 
+			const std::vector<float>& faceFeatures,
+			const std::map<int, headOverlay_t>& headOverlays,
+			const std::vector<std::pair<uint32_t, uint32_t>> decorations) = 0;
 
+		virtual uint32_t GetDecoration(uint32_t collection) = 0;
+		virtual void SetDecoration(uint32_t collection, uint32_t overlay) = 0;
+		virtual void SetDecorations(std::vector<std::pair<uint32_t, uint32_t>> decorations) = 0;
+		
 		virtual void Eval(const std::string& code) = 0;
 
 		virtual const std::string& GetName() = 0;
@@ -212,7 +223,7 @@ namespace rage
 		{
 			const int count = sizeof...(Args);
 
-			if (count == 0)
+			if constexpr(count == 0)
 				this->_Call(eventName);
 			else
 			{
@@ -226,7 +237,7 @@ namespace rage
 		{
 			const int count = sizeof...(Args);
 
-			if (count == 0)
+			if constexpr(count == 0)
 				this->_Invoke(hash);
 			else
 			{
