@@ -122,6 +122,7 @@ namespace rage
 			const std::vector<std::pair<uint32_t, uint32_t>> decorations) = 0;
 
 		virtual uint32_t GetDecoration(uint32_t collection) = 0;
+		virtual void RemoveDecoration(uint32_t collection, uint32_t overlay) = 0;
 		virtual void SetDecoration(uint32_t collection, uint32_t overlay) = 0;
 		virtual void SetDecorations(std::vector<std::pair<uint32_t, uint32_t>> decorations) = 0;
 		
