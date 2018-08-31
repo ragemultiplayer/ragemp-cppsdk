@@ -60,37 +60,31 @@ namespace rage
 		TextLabel,
 	};
 
+	class IEntity;
+
+#pragma pack(push, 1)
 	struct clothData_t
 	{
-		union
-		{
-			struct
-			{
-				uint8_t drawableId;
-				uint8_t textureId;
-				uint8_t paletteId;
-			} a;
-			uint32_t i;
-		};
+		uint8_t drawableId;
+		uint8_t textureId;
+		uint8_t paletteId;
+	};
+
+	struct headBlend_t
+	{
+		uint8_t m_shape[3];
+		uint8_t m_skin[3];
+		float m_shapeMix;
+		float m_skinMix;
+		float m_thirdMix;
 	};
 
 	struct propData_t
 	{
-		union
-		{
-			struct
-			{
-				uint8_t drawableId;
-				uint8_t textureId;
-			} a;
-			uint32_t i;
-		};
+		uint8_t drawableId;
+		uint8_t textureId;
 	};
 
-	class IEntity;
-
-
-#pragma pack(push, 1)
 	struct arg_t
 	{
 	public:
@@ -108,12 +102,12 @@ namespace rage
 		};
 
 		arg_t() : type(val_t::Null), v{} { }
-		explicit arg_t(bool b) : type(val_t::Boolean), v { b } { }
-		explicit arg_t(int i) : type(val_t::Int), v { i } { }
-		explicit arg_t(float f) : type(val_t::Float), v { f } { }
-		explicit arg_t(const std::string& str) : type(val_t::String), v { new char[str.length() + 1] } { memcpy(v.str, str.c_str(), str.length()); v.str[str.length()] = 0; }
-		explicit arg_t(entity_t entityType, entityId_t id, rage::IEntity *entity) : type(val_t::Entity), v{ entityType, id, entity } { }
-		explicit arg_t(const arg_t& r) : type(val_t::Null) { *this = r; }
+		arg_t(bool b) : type(val_t::Boolean), v { b } { }
+		arg_t(int i) : type(val_t::Int), v { i } { }
+		arg_t(float f) : type(val_t::Float), v { f } { }
+		arg_t(const std::string& str) : type(val_t::String), v { new char[str.length() + 1] } { memcpy(v.str, str.c_str(), str.length()); v.str[str.length()] = 0; }
+		arg_t(entity_t entityType, entityId_t id, rage::IEntity *entity) : type(val_t::Entity), v{ entityType, id, entity } { }
+		arg_t(const arg_t& r) : type(val_t::Null) { *this = r; }
 
 		void SetNull() { DeleteString(); type = val_t::Null; }
 		void SetBoolean(bool b) { DeleteString(); type = val_t::Boolean; v.b = b; }
