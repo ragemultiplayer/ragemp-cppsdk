@@ -18,6 +18,11 @@ namespace rage
 		virtual void _CallInDimension(dimensionId_t dimension, const std::string& eventName, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
 		virtual void _CallFor(const std::vector<rage::IPlayer*>& players, const std::string& eventName, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
 
+		virtual void _Call(uint64_t eventName, const rage::arg_t *arguments = nullptr, size_t count = 0) = 0;
+		virtual void _CallInRange(const vector3& position, float range, dimensionId_t dimension, uint64_t eventName, const rage::arg_t *arguments = nullptr, size_t count = 0) = 0;
+		virtual void _CallInDimension(dimensionId_t dimension, uint64_t eventName, const rage::arg_t *arguments = nullptr, size_t count = 0) = 0;
+		virtual void _CallFor(const std::vector<rage::IPlayer*>& players, uint64_t eventName, const arg_t *arguments = nullptr, size_t count = 0) = 0;
+
 		virtual void _Invoke(uint64_t nativeHash, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
 		virtual void _InvokeInRange(const vector3& position, float range, dimensionId_t dimension, uint64_t nativeHash, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
 		virtual void _InvokeInDimension(dimensionId_t dimension, uint64_t nativeHash, const arg_t *arguments = nullptr, size_t count = 0) const = 0;
