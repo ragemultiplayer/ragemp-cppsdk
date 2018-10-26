@@ -113,6 +113,15 @@ namespace rage
 		virtual void SetDecoration(uint32_t collection, uint32_t overlay) = 0;
 		virtual void SetDecorations(std::vector<std::pair<uint32_t, uint32_t>> decorations) = 0;
 		
+#ifdef RAGEMPSDK_TESTING_BRANCH	
+		virtual void ClearDecorations() = 0;
+
+		virtual void EnableVoiceTo(IPlayer *target) = 0;
+		virtual void DisableVoiceTo(IPlayer *target) = 0;
+
+		virtual std::vector<IPlayer*> GetVoiceListeners() = 0;
+#endif	
+		
 		virtual void Eval(const std::string& code) = 0;
 
 		virtual const std::string& GetName() = 0;
